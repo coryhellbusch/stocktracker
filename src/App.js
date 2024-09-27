@@ -1,24 +1,19 @@
-import logo from './logo.svg';
 import './App.css';
+import PositionsComponent from './Components/PositionsComponent'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import NewPositionComponent from "./Components/NewPositionComponent";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <>
+          <BrowserRouter>
+            <Routes>
+                <Route path='/' element={ <PositionsComponent /> }></Route>
+                <Route path='/new-position' element={ <NewPositionComponent />}></Route>
+                <Route path='/update-position/:id' element={<NewPositionComponent />}></Route>
+            </Routes>
+          </BrowserRouter>
+      </>
   );
 }
 
