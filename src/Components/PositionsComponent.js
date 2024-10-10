@@ -1,49 +1,55 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom'
-import {getAllPositions} from "./PositionService";
+import {getAllPositions, getStockData} from "./PositionService";
 import StockDataComponent from "./StockDataComponent";
 
 const PositionsComponent = ()=> {
 
     const [positions, setPositions] = useState([])
+    const [positionsWithStockData, setPositionsWithStockData] = useState([]);
     const navigate = useNavigate();
-    const [totals, setTotals] = useState({
-        totalValue: 0,
-        totalReturnLoss: 0
-    });
 
     useEffect(() => {
         listPositions();
 
     }, [])
 
-    function listPositions() {
-        getAllPositions().then((response) => {
+    async function listPositions() {
+        try {
+            const response = await getAllPositions();
             const positionsData = response.data;
-            setPositions(response.data);
 
-            let totalValue = 0;
-            let totalReturnLoss = 0;
+            const updatedPositions = await Promise.all(positionsData.map(async (position) => {
+                const stockResponse = await getStockData(position.ticker);
+                const stockData = stockResponse.data[0];
+                return {...position, stockData};
+            }));
 
-            positionsData.forEach(position => {
-                const stockData = position.stockData || {close: position.purchase_price};
-
-                totalValue += position.quantity_owned * stockData.close;
-                totalReturnLoss += ((stockData.close - position.purchase_price) / stockData.close) * 100;
-            });
-        }).catch(error => {
-            console.error(error)
-        })
-
-        setTotals({
-
-        })
-
+            setPositionsWithStockData(updatedPositions);
+        } catch (error) {
+            console.error(error);
+        }
     }
+
 
     function addNewPosition() {
         navigate('/new-position')
     }
+
+    const totalValueOfShares = positionsWithStockData.reduce((acc, position) => {
+        const currentPrice = position.stockData?.close || 0;
+        return acc + (position.quantity_owned * currentPrice);
+    }, 0).toFixed(2);
+
+    const valueOfSharesAtPurchase = positionsWithStockData.reduce((acc, position) => {
+        const purchasePrice = position.purchase_price || 0;
+        const quantityOwned = position.quantity_owned || 0;
+        const valueAtPurchase = purchasePrice * quantityOwned;
+        return acc + valueAtPurchase;
+    }, 0).toFixed(2);
+
+    const totalReturnLoss = (((totalValueOfShares - valueOfSharesAtPurchase) / valueOfSharesAtPurchase) * 100).toFixed(2);
+
 
     return(
         <div className='container'>
@@ -65,11 +71,11 @@ const PositionsComponent = ()=> {
                     </thead>
                     <tbody>
                     {
-                        positions.map(position =>
+                        positionsWithStockData.map(position =>
                             <StockDataComponent
-                            key={position.id}
-                            position={position}
-                            listPositions={listPositions}
+                                key={position.id}
+                                position={position}
+                                listPositions={listPositions}
                             />
                         )
                     }
@@ -77,8 +83,8 @@ const PositionsComponent = ()=> {
                     <tfoot>
                         <tr>
                             <td colSpan={5}><strong>Totals</strong></td>
-                            <td><strong>{totals.totalValue}</strong></td>
-                            <td><strong>{totals.totalReturnLoss}%</strong></td>
+                            <td><strong>{"$" + totalValueOfShares}</strong></td>
+                            <td><strong>{totalReturnLoss + "%"}</strong></td>
                         </tr>
                     </tfoot>
                 </table>
