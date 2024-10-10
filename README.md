@@ -1,4 +1,5 @@
 Stock Tracker App
+
 A stock tracking application built with a Java Spring Boot backend and a React.js frontend. The app allows users to manage stock positions, view real-time stock prices, and track the performance of their stock portfolio.
 
 Features
@@ -8,6 +9,7 @@ Features
 - View profit/loss on individual positions.
 
 Tech Stack
+
 Backend:
 - Java (Spring Boot)
 - MySQL (Database)
@@ -21,6 +23,7 @@ Frontend:
 - React Router (navigation)
 
 Installation:
+
 Prerequisites:
 - Java 11+ and Maven
 - Node.js and npm
